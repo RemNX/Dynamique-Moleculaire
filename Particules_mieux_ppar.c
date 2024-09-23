@@ -2,7 +2,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#define delta_t  10e-6
+//#define delta_t  10e-6
+double delta_t;
 #define nbx_particules   5
 
 /*Definition Particule avec x,y,vitesse selon x
@@ -135,52 +136,61 @@ void resolution(Particule tab_par[])
 
 int main() 
 {
-    //srand(time(NULL)); // pour les nombres aleatoires
-    
-    Particule tab_particules [nbx_particules];
+    char nom_fichier[20];
+    for (int h=-9; h<=2;h++){
+        for (int k=1;k<=9;k++){
+        sprintf(nom_fichier,"amp_plot/Etot_%de%d.txt",k,h);
+        delta_t = k*pow(10,h);
 
-    initPoint(&tab_particules[0], 2, 2.3,  4,  3);
+        //srand(time(NULL)); // pour les nombres aleatoires
+        
+        Particule tab_particules [nbx_particules];
 
-    initPoint(&tab_particules[1], 1.5,  3,  3,  2);
+        initPoint(&tab_particules[0], 2, 2.3,  4,  3);
 
-    initPoint(&tab_particules[2],  1,  1.5,  4,  5);
+        initPoint(&tab_particules[1], 1.5,  3,  3,  2);
 
-    initPoint(&tab_particules[3],  1.7,  1.6,  2,  3);
+        initPoint(&tab_particules[2],  1,  1.5,  4,  5);
 
-    initPoint(&tab_particules[4],  2.4,  3,  3,  5);
-    
-    char command[500];
+        initPoint(&tab_particules[3],  1.7,  1.6,  2,  3);
 
-    double t=0.0;
-    
-    FILE *out;
+        initPoint(&tab_particules[4],  2.4,  3,  3,  5);
+        
+        char command[500];
 
-     int i,j;
-   /*  for ( i=0;i<10;i++)
-    {
-        tab_particules[i]=genererParticule();
-        //printf("%f\n",tab_particules[0].vx);
+        double t=0.0;
+        
+        FILE *out;
+
+        int i,j;
+    /*  for ( i=0;i<10;i++)
+        {
+            tab_particules[i]=genererParticule();
+            //printf("%f\n",tab_particules[0].vx);
+        }
+    */
+        //out = fopen ("Etot.txt", "w");
+        out = fopen (nom_fichier, "w");
+        for (j=0;j<5000;j++)
+        {
+            t+=delta_t;
+            resolution(tab_particules);
+            //printf("%.10f\n",Energie_totale(tab_particules)); //verification energie totale
+            fprintf (out, "%22.8g  %22.8g \n",t,\
+            Energie_totale(tab_particules));//Potentiel_LJ(&tab_particules[0],&tab_particules[1]));
+        }
+        fclose (out);
+        //sprintf (command, "gnuplot -p -e \"plot 'potentiel.txt' w l , \" ");
+    /* sprintf(command, 
+            "gnuplot -p -e \"set title 'Etot_{12}' font ',16'; \
+            set xlabel 'r/d'; \
+            set ylabel 'E/E0'; \
+            set grid;\
+            plot Etot_5e-6' w l\"");
+
+        system (command); */
+
+        }
     }
- */
-    out = fopen ("Etot.txt", "w");
-    for (j=0;j<5000;j++)
-    {
-        t+=delta_t;
-        resolution(tab_particules);
-        //printf("%.10f\n",Energie_totale(tab_particules)); //verification energie totale
-        fprintf (out, "%22.8g  %22.8g \n",t,\
-        Energie_totale(tab_particules));//Potentiel_LJ(&tab_particules[0],&tab_particules[1]));
-    }
-    fclose (out);
-    //sprintf (command, "gnuplot -p -e \"plot 'potentiel.txt' w l , \" ");
-   sprintf(command, 
-        "gnuplot -p -e \"set title 'Etot_{12}' font ',16'; \
-        set xlabel 'r/d'; \
-        set ylabel 'E/E0'; \
-        set grid;\
-        plot 'Etot.txt' w l\"");
-
-    system (command);
-
     return 0;
 }
