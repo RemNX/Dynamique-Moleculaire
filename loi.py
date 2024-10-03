@@ -6,29 +6,14 @@ import numpy as np
 
 #Enregistrer les fichiers au même endroit que le programme py : 
 nom_fichiers = []
-pas_de_temps=[]
+pas_de_temps=[0.007625  ,0.003812  ,0.002542  ,0.001906  ,0.001525  ,0.001271  ,0.001089  ,0.000953  ,0.000847  ,0.000762  ,0.000693  ,0.000635  ,0.000587  ,0.000545  ,0.000508  ,0.000477  ,0.000449  ,0.000424  ,0.000401  ,0.000381  ,0.000363  ,0.000347  ,0.000332  ,0.000318  ,0.000305  ,0.000293  ,0.000282  ,0.000272  ,0.000263  ,0.000254]
 
-for i in range(-5,-1):
-    for j in np.arange(1,9.1,0.4):
-        j_rounded = round(j, 1)
-        nom_fichiers.append(f'Etot_{j_rounded}e{i}.txt')
-        pas_de_temps.append(float(f'{j_rounded}e{i}'))
+for i in range(30):
+        nom_fichiers.append(f'Etot_{i}.txt')
+       
 
-data_ref=[]
-temps_ref=[]
-
-with open('Etot_5.0e-4.txt','r') as file :
-    for line in file :
-        left,right = line.split(':')
-        data_ref.append(float(right.strip()))
-        temps_ref.append(float(left.strip()))
-    maxi = max(data_ref)
-    for h in range(0,len(data_ref)):
-        if data_ref[h] == maxi :
-            indice=h
-
-E0 = data_ref[0]
-temps_ref_final=temps_ref[indice]
+E0 = 293.67526 
+temps_ref_final=0.762500
 
 liste_temps=[]
 data = []
@@ -42,9 +27,8 @@ for i in nom_fichiers :
             data.append(float(right.strip()))
             liste_temps.append(float(left.strip()))
 
-        init = abs(liste_temps[0]-temps_ref_final)
         for l in range(0,len(liste_temps)):
-            if abs(liste_temps[l]-temps_ref_final) <= init :
+            if abs(liste_temps[l]-temps_ref_final) <= 0 :
                 closest_index=l
 
         closest_value = data[closest_index]
@@ -56,7 +40,7 @@ for i in nom_fichiers :
 
 liste_diff = [np.log(abs(i - E0)) for i in liste_E_t_ref]
 liste_diff_deltat =[np.log(j) for j in pas_de_temps]
-droite = [k-1.6 for k in liste_diff_deltat]
+droite = [k+4.6 for k in liste_diff_deltat]
 
 plt.plot( liste_diff_deltat, liste_diff, "o")
 plt.plot(liste_diff_deltat, droite)
