@@ -4,7 +4,7 @@
 #include <time.h>
 //#define delta_t  10e-6
 double delta_t;
-#define nbx_particules   5
+#define nbx_particules   10
 
 /*Definition Particule avec x,y,vitesse selon x
 , vitesse selon y*/
@@ -137,8 +137,8 @@ void resolution(Particule tab_par[])
 int main()
 {
     char nom_fichier[20];
-    for (int h=-5; h<=-4;h++){
-        for (float k=1;k<=9;k+=0.1){
+    for (int h=-5; h<=-1;h++){
+        for (float k=1;k<=9;k+=0.4){
         sprintf(nom_fichier,"Etot_%.1fe%d.txt",k,h);
         delta_t = k*pow(10,h);
 
@@ -146,15 +146,25 @@ int main()
 
         Particule tab_particules [nbx_particules];
 
-            initPoint(&tab_particules[0], 1 , 1,  10.4,  10);
+        initPoint(&tab_particules[0], 0.369163, 7.001539, 2.461984, 6.004601);
 
-            initPoint(&tab_particules[1], 0.8 ,  4.5,  50,  10.6);
+        initPoint(&tab_particules[1], 11.804992, 12.508632, 6.039470, 6.527302);
 
-            initPoint(&tab_particules[2],  0,  2,  30,  10);
+        initPoint(&tab_particules[2], 0.720203, 14.251818, 1.136606, 7.847989);
 
-            initPoint(&tab_particules[3],  1.3 ,  0,  40, 20);
+        initPoint(&tab_particules[3], 2.790903, 8.519731, 2.597047, 7.523878);
+    
+        initPoint(&tab_particules[4], 5.316689, 9.872263, 0.398034, 5.516499);
 
-            initPoint(&tab_particules[4],  1.2 ,  3.1,  40,  0);
+        initPoint(&tab_particules[5], 5.712756, 5.894922, 5.035953, 7.358547);
+
+        initPoint(&tab_particules[6],8.860042, 7.814479, 6.068676, 9.158643);
+
+        initPoint(&tab_particules[7], 12.048815, 1.838540, 1.266312, 8.278652);
+
+        initPoint(&tab_particules[8], 8.840079, 5.592444, 4.283253, 3.763380);
+
+        initPoint(&tab_particules[9],3.101077, 0.484085, 0.290682, 2.547519); 
 
         char command[500];
 
@@ -171,7 +181,7 @@ int main()
     */
         //out = fopen ("Etot.txt", "w");
         out = fopen (nom_fichier, "w");
-        for (j=0;j<5000;j++)
+        for (j=0;j<3*1/delta_t;j++)
         {
             t+=delta_t;
             resolution(tab_particules);
@@ -181,16 +191,16 @@ int main()
         }
         fclose (out);
         //sprintf (command, "gnuplot -p -e \"plot 'potentiel.txt' w l , \" ");
-    /* sprintf(command,
+         /* sprintf(command,
             "gnuplot -p -e \"set title 'Etot_{12}' font ',16'; \
             set xlabel 'r/d'; \
             set ylabel 'E/E0'; \
             set grid;\
             plot Etot_5e-6' w l\"");
 
-        system (command); */
-
-        }
+        system (command); 
+ */
+    }
     }
     return 0;
 }

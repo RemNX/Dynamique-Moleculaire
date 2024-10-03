@@ -8,8 +8,8 @@ import numpy as np
 nom_fichiers = []
 pas_de_temps=[]
 
-for i in range(-5,-3):
-    for j in np.arange(1,9.1,0.1):
+for i in range(-5,-1):
+    for j in np.arange(1,9.1,0.4):
         j_rounded = round(j, 1)
         nom_fichiers.append(f'Etot_{j_rounded}e{i}.txt')
         pas_de_temps.append(float(f'{j_rounded}e{i}'))
@@ -17,7 +17,7 @@ for i in range(-5,-3):
 data_ref=[]
 temps_ref=[]
 
-with open('Etot_8.0e-5.txt','r') as file :
+with open('Etot_5.0e-4.txt','r') as file :
     for line in file :
         left,right = line.split(':')
         data_ref.append(float(right.strip()))
@@ -56,7 +56,7 @@ for i in nom_fichiers :
 
 liste_diff = [np.log(abs(i - E0)) for i in liste_E_t_ref]
 liste_diff_deltat =[np.log(j) for j in pas_de_temps]
-droite = [k for k in liste_diff_deltat]
+droite = [k-1.6 for k in liste_diff_deltat]
 
 plt.plot( liste_diff_deltat, liste_diff, "o")
 plt.plot(liste_diff_deltat, droite)
