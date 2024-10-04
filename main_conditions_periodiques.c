@@ -125,7 +125,7 @@ void calcul_forces (Particule tab_par[])
                     float disty=(tab_par[i].y-tab_par[j].y);
                     float abs_disty=fabsf(disty);
                     Particule par_tmp;
-                    initPoint(&par_tmp,tab_par[i].x,tab_par[i].y,tab_par[i].vx,tab_par[i].vy);
+                    initPoint(&par_tmp,tab_par[j].x,tab_par[j].y,tab_par[j].vx,tab_par[j].vy);
 
                     if(abs_distx>L/2) 
                     {
