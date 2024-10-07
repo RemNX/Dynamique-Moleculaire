@@ -8,6 +8,7 @@
 #define L 50
 #define Rc 2.5
 #define m 1 
+#define PI 3.141592653589793
 
 /*Definition Particule avec x,y,vitesse selon x  
 , vitesse selon y*/ 
@@ -76,7 +77,7 @@ double Potentiel_LJ(Particule *p2, Particule *p1)
 
 double Energie_totale(Particule tab_par[])
 {
-    double E=0.0,U=0.0;
+    double E=0.0,U=0.0,U_tail;
 
     for (int i=0;i<nbx_particules;i++)
     {
@@ -89,7 +90,8 @@ double Energie_totale(Particule tab_par[])
         E+=(pow(tab_par[i].vx,2)+pow(tab_par[i].vy,2))/2;
 
     }
-    return U+E;
+    U_tail=4*PI*nbx_particules*nbx_particules/(L*L)*((pow((1/10*Rc),10)-pow((1/4*Rc),4)));
+    return U+E+U_tail;
 }
 
 /*Fonction qui resoud les equations differentielles d'une particule
