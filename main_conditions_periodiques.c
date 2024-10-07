@@ -7,6 +7,7 @@
 #define nbx_particules   10
 #define L 50
 #define Rc 2.5
+#define m 1 
 
 /*Definition Particule avec x,y,vitesse selon x  
 , vitesse selon y*/ 
@@ -139,32 +140,44 @@ void calcul_forces (Particule tab_par[])
                         par_tmp.y=y2;
                     }
                     f_x += force_selon_x(&par_tmp,&tab_par[i]);
-                    f_y += force_selon_x(&par_tmp,&tab_par[i]);
-                    
+                    f_y += force_selon_y(&par_tmp,&tab_par[i]);
                 }
             }
         }
-
         tab_par[i].fx=f_x;
         tab_par[i].fy=f_y;
     }
-
 }
 
 void resolution(Particule tab_par[],double delta_t)
 {
     //je commence par déterminer f_indice_x :
+    Particule tab_par_temp[nbx_particules];
+
     calcul_forces(tab_par);
     for ( int i=0;i<nbx_particules;i++)
     {
-        tab_par[i].vx = tab_par[i].vx + tab_par[i].fx*delta_t;
-        tab_par[i].vy  = tab_par[i].vy + tab_par[i].fy*delta_t;
-        tab_par[i].x =  tab_par[i].x + tab_par[i].vx*delta_t;
-        tab_par[i].y = tab_par[i].y + tab_par[i].vy*delta_t;
+        tab_par[i].x = tab_par[i].x + tab_par[i].vx*delta_t + 1/(2*m)*tab_par[i].fx*(delta_t*delta_t);
+        tab_par[i].y = tab_par[i].y + tab_par[i].vy*delta_t + 1/(2*m)*tab_par[i].fy*(delta_t*delta_t);
+        tab_par_temp[i].x=tab_par[i].x;
+        tab_par_temp[i].y=tab_par[i].y;
+        tab_par_temp[i].fx=tab_par[i].fx;
+        tab_par_temp[i].fy=tab_par[i].fy;
+    }
+
+    calcul_forces(tab_par_temp);
+
+    for ( int i=0;i<nbx_particules;i++)
+    {
+        tab_par[i].vx = tab_par[i].vx + 1/(2*m)*(tab_par_temp[i].fx+ tab_par[i].fx)*delta_t;
+        tab_par[i].vy = tab_par[i].vy + 1/(2*m)*(tab_par_temp[i].fy + tab_par[i].fy)*delta_t;
 
 
-       /*  printf("%d %15.4f %15.4f %15.4f\n",i,(pow(tab_par[i].vx,2)+pow(tab_par[i].vy,2)) \
-        ,tab_par[i].fx,tab_par[i].fy); */
+        // tab_par[i].vx = tab_par[i].vx + tab_par[i].fx*delta_t;
+        // tab_par[i].vy  = tab_par[i].vy + tab_par[i].fy*delta_t;
+        // tab_par[i].x =  tab_par[i].x + tab_par[i].vx*delta_t;
+        // tab_par[i].y = tab_par[i].y + tab_par[i].vy*delta_t;
+
     }
 
 
