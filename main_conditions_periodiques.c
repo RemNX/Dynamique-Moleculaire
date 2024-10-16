@@ -101,8 +101,7 @@ void calcul_forces (Particule tab_par[])
                 x2=tab_par[j].x;
                 y2=tab_par[j].y;
 
-                if(rij>Rc)
-                {
+                
                     double distx=(tab_par[i].x-tab_par[j].x);
                     double abs_distx=fabsf(distx);
 
@@ -118,11 +117,13 @@ void calcul_forces (Particule tab_par[])
                     {
                         y2=(distx/abs_distx)*L+y2;
                     }                
+                
+               if(rij<=Rc)
+                { 
+                    terme=-24.0/rij*(2.0*pow((1/rij),13)-pow((1/rij),7)); 
+                    f_x += terme*(x2-tab_par[i].x);
+                    f_y += terme*(y2-tab_par[i].y);
                 }
-
-                terme=-24.0/rij*(2.0*pow((1/rij),13)-pow((1/rij),7)); 
-                f_x += terme*(x2-tab_par[i].x);
-                f_y += terme*(y2-tab_par[i].y);
             }
         }
         tab_par[i].fx=f_x;
