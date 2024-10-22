@@ -6,8 +6,8 @@
 //#define delta_t  10e-6
 #define nbx_particules   10
 
-/*Definition Particule avec x,y,vitesse selon x
-, vitesse selon y*/
+/*Definition Particule avec x,y,vitesse selon x  
+, vitesse selon y*/ 
 typedef struct
 {
     double x;
@@ -64,7 +64,9 @@ double force_selon_y(Particule *p2, Particule *p1)
 double Potentiel_LJ(Particule *p2, Particule *p1)
 {
     double rij=distance(p1,p2);
-    double U=4*(pow((1/rij),12)-pow((1/rij),6));
+    double U;
+    U=4*(pow((1/rij),12)-pow((1/rij),6));
+
     return U;
 }
 
@@ -125,10 +127,6 @@ void resolution(Particule tab_par[],double delta_t)
         tab_par[i].vy  = tab_par[i].vy + tab_par[i].fy*delta_t;
         tab_par[i].x =  tab_par[i].x + tab_par[i].vx*delta_t;
         tab_par[i].y = tab_par[i].y + tab_par[i].vy*delta_t;
-
-
-       /*  printf("%d %15.4f %15.4f %15.4f\n",i,(pow(tab_par[i].vx,2)+pow(tab_par[i].vy,2)) \
-        ,tab_par[i].fx,tab_par[i].fy); */
     }
 
 
@@ -197,19 +195,26 @@ int main() {
         printf("Aucune valeur de delta_t n'était égale à 5.0e-4\n");
     }
 
-    const int dim=30;
+    const int dim=54;
     double test[dim];
+    double diviseur[]={ 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                    10, 20, 30, 40, 50, 60, 70, 80, 90,
+                    100, 200, 300, 400, 500, 600, 700, 800, 900,
+                    1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000,
+                    10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000,
+                    100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000
+                    };
 
     for (int i=0; i<dim; ++i) {
-        double diviseur = 100*(i+1);
-        test[i] = temps_ref/diviseur;
-        printf(" ,%lf ",test[i]);
+        test[i] = temps_ref/diviseur[i];
+        printf(" ,%.10lf ",test[i]);
+        if(i%5==0 ) printf("\n");
     }
 
-    char nom_fichier[20];
+     char nom_fichier[25];
     for (int k=0; k<dim; ++k) {
 
-        sprintf(nom_fichier, "Etot_%d.txt",k);
+        sprintf(nom_fichier, "Energies/Etot_%d.txt",k);
         delta_t = test[k];
 
         Particule tab_particules_bis[nbx_particules];
@@ -230,13 +235,18 @@ int main() {
         FILE *out;
 
         out = fopen(nom_fichier, "w");
-        for (int j = 0; j < 3 * 1 / delta_t; j++) {
-            t += delta_t;
-            resolution(tab_particules_bis,delta_t);
-            fprintf(out, "%22.8g : %22.8g \n", t, Energie_totale(tab_particules_bis));
+        for (int j = 0; j < 3 * 1 / delta_t; j++) 
+        {
+            if (t<temps_ref)
+            {
+                t += delta_t;
+                resolution(tab_particules_bis,delta_t);
+                fprintf(out, "%22.8g : %22.8g \n", t, Energie_totale(tab_particules_bis));
+            }
+            else break;
         }
         fclose(out);
-    }
+    } 
     return 0;
 
 }
