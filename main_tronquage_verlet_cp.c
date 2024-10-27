@@ -7,7 +7,7 @@
 #define nbx_particules   10
 const int sigma=1;
 #define Rc   3.0*sigma
-#define pi 3.14
+#define pi   M_PI
 #define MIN_DISTANCE 2.0
 #define L 100 //Taille de la boîte 
 const double Lmoitie = L*0.5;
