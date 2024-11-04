@@ -44,7 +44,7 @@ typedef struct
 } Particule;
 
 /*Constructeur*/
-void initPoint(Particule *p, double x, double y, double vx, double vy)
+void init_Particule(Particule *p, double x, double y, double vx, double vy)
 {
     p->x = x;
     p->y = y;
@@ -219,6 +219,8 @@ void resolution_euler(Particule tab_par[],double delta_t)
 
 
 }
+
+//methode des moindres carrés pour y=ax+b, n est la dimensuion de y et x (nombre de points)
 double mc_ax_plus_b (double x[], double y[], double *a, double *b, double n)
 {
     int i;
@@ -250,25 +252,25 @@ int main() {
 
     Particule tab_particules[nbx_particules];
 
-    initPoint(&tab_particules[0], 0.369163, 7.001539, 2.461984, 6.004601);
+    init_Particule(&tab_particules[0], 0.369163, 7.001539, 2.461984, 6.004601);
 
-    initPoint(&tab_particules[1], 11.804992, 12.508632, 6.039470, 6.527302);
+    init_Particule(&tab_particules[1], 11.804992, 12.508632, 6.039470, 6.527302);
 
-    initPoint(&tab_particules[2], 0.720203, 14.251818, 1.136606, 7.847989);
+    init_Particule(&tab_particules[2], 0.720203, 14.251818, 1.136606, 7.847989);
 
-    initPoint(&tab_particules[3], 2.790903, 8.519731, 2.597047, 7.523878);
+    init_Particule(&tab_particules[3], 2.790903, 8.519731, 2.597047, 7.523878);
 
-    initPoint(&tab_particules[4], 5.316689, 9.872263, 0.398034, 5.516499);
+    init_Particule(&tab_particules[4], 5.316689, 9.872263, 0.398034, 5.516499);
 
-    initPoint(&tab_particules[5], 5.712756, 5.894922, 5.035953, 7.358547);
+    init_Particule(&tab_particules[5], 5.712756, 5.894922, 5.035953, 7.358547);
 
-    initPoint(&tab_particules[6],8.860042, 7.814479, 6.068676, 9.158643);
+    init_Particule(&tab_particules[6],8.860042, 7.814479, 6.068676, 9.158643);
 
-    initPoint(&tab_particules[7], 12.048815, 1.838540, 1.266312, 8.278652);
+    init_Particule(&tab_particules[7], 12.048815, 1.838540, 1.266312, 8.278652);
 
-    initPoint(&tab_particules[8], 8.840079, 5.592444, 4.283253, 3.763380);
+    init_Particule(&tab_particules[8], 8.840079, 5.592444, 4.283253, 3.763380);
 
-    initPoint(&tab_particules[9],3.101077, 0.484085, 0.290682, 2.547519);
+    init_Particule(&tab_particules[9],3.101077, 0.484085, 0.290682, 2.547519);
 
 
     double t=0.0,a,b;
@@ -324,16 +326,16 @@ int main() {
 
         delta_t = test[k];
         
-        initPoint(&tab_particules[0], 0.369163, 7.001539, 2.461984, 6.004601);
-        initPoint(&tab_particules[1], 11.804992, 12.508632, 6.039470, 6.527302);
-        initPoint(&tab_particules[2], 0.720203, 14.251818, 1.136606, 7.847989);
-        initPoint(&tab_particules[3], 2.790903, 8.519731, 2.597047, 7.523878);
-        initPoint(&tab_particules[4], 5.316689, 9.872263, 0.398034, 5.516499);
-        initPoint(&tab_particules[5], 5.712756, 5.894922, 5.035953, 7.358547);
-        initPoint(&tab_particules[6], 8.860042, 7.814479, 6.068676, 9.158643);
-        initPoint(&tab_particules[7], 12.048815, 1.838540, 1.266312, 8.278652);
-        initPoint(&tab_particules[8], 8.840079, 5.592444, 4.283253, 3.763380);
-        initPoint(&tab_particules[9], 3.101077, 0.484085, 0.290682, 2.547519);
+        init_Particule(&tab_particules[0], 0.369163, 7.001539, 2.461984, 6.004601);
+        init_Particule(&tab_particules[1], 11.804992, 12.508632, 6.039470, 6.527302);
+        init_Particule(&tab_particules[2], 0.720203, 14.251818, 1.136606, 7.847989);
+        init_Particule(&tab_particules[3], 2.790903, 8.519731, 2.597047, 7.523878);
+        init_Particule(&tab_particules[4], 5.316689, 9.872263, 0.398034, 5.516499);
+        init_Particule(&tab_particules[5], 5.712756, 5.894922, 5.035953, 7.358547);
+        init_Particule(&tab_particules[6], 8.860042, 7.814479, 6.068676, 9.158643);
+        init_Particule(&tab_particules[7], 12.048815, 1.838540, 1.266312, 8.278652);
+        init_Particule(&tab_particules[8], 8.840079, 5.592444, 4.283253, 3.763380);
+        init_Particule(&tab_particules[9], 3.101077, 0.484085, 0.290682, 2.547519);
 
         double t = 0.0;
 

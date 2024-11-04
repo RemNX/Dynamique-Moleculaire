@@ -31,3 +31,4 @@ Le projet Atomistique a pour objectif d'explorer les concepts fondamentaux de la
 ## Contact
 
 Si vous avez des questions, des problèmes ou des suggestions concernant le projet, n'hésitez pas à ouvrir une issue sur ce dépôt pour signaler un problème ou poser une question.
+
