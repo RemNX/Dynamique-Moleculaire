@@ -6,10 +6,10 @@
 
 #define nbx_particules   10
 const int sigma=1;
-#define Rc   3.0*sigma
+#define Rc   2.5*sigma
 #define pi   M_PI
 #define MIN_DISTANCE 2.0
-#define L 100 //Taille de la boîte 
+#define L 50//Taille de la boîte 
 const double Lmoitie = L*0.5;
 const double rho = nbx_particules/(L*L);
 const double epsilon = 1;
@@ -168,7 +168,7 @@ void calcul_forces (Particule tab_par[])
 
 //-----------------------------{resolution}-----------------------------
 
-void resolution(Particule tab_par[],double delta_t)
+void resolution_verlet(Particule tab_par[],double delta_t)
 {
     //je commence par déterminer f_indice_x :
     Particule tab_par_temp[nbx_particules];
@@ -199,7 +199,47 @@ void resolution(Particule tab_par[],double delta_t)
         tab_par[i].vy = tab_par[i].vy + 0.5*(tab_par_temp[i].fy + tab_par[i].fy)*delta_t;
     }
 }
+void resolution_euler(Particule tab_par[],double delta_t)
+{
+    //je commence par déterminer f_indice_x :
+    calcul_forces(tab_par);
+    for ( int i=0;i<nbx_particules;i++)
+    {
+        tab_par[i].vx = tab_par[i].vx + tab_par[i].fx*delta_t;
+        tab_par[i].vy  = tab_par[i].vy + tab_par[i].fy*delta_t;
+        tab_par[i].x =  tab_par[i].x + tab_par[i].vx*delta_t;
+        tab_par[i].y = tab_par[i].y + tab_par[i].vy*delta_t;
 
+        if(tab_par[i].x > Lmoitie){ tab_par[i].x-=L;}
+        else if(tab_par[i].x < -Lmoitie){ tab_par[i].x+=L;}
+
+        if(tab_par[i].y > Lmoitie) {tab_par[i].y-=L;}
+        else if(tab_par[i].y < -Lmoitie) {tab_par[i].y+=L;}
+    }
+
+
+}
+double mc_ax_plus_b (double x[], double y[], double *a, double *b, double n)
+{
+    int i;
+    double si, sx, sy, sxy, sxx;
+    double delta;
+    si = sx = sxy = sxx = 0;
+    for (i = 0; i <= n - 1; i++)
+      {
+        //if (x[i]>-7 && x[i]<-2  )// Euler
+       if (x[i]>-8 && x[i]<-4)//Verlet
+        {si += 1;
+        sxx += pow (x[i], 2);
+        sxy += x[i] * y[i];
+        sx += x[i];
+        sy += y[i];}
+      }
+
+    delta = (sxx * si) - (sx * sx);
+    *a = (1 / delta) * (sxy * si - sy * sx);
+    *b = (1 / delta) * (sxx * sy - sxy * sx);
+}
 //-----------------------------{main}-----------------------------
 
 int main() {
@@ -230,14 +270,13 @@ int main() {
 
     initPoint(&tab_particules[9],3.101077, 0.484085, 0.290682, 2.547519);
 
-    char command[500];
 
-    double t=0.0;
+    double t=0.0,a,b;
 
     FILE *out;
 
     int i,j;
-    out = fopen ("testfin.txt", "w");
+    out = fopen ("test1.txt", "w");
 
     if (!out) {
         perror("Erreur lors de l'ouverture du fichier");
@@ -247,13 +286,10 @@ int main() {
     for (j=0;j<3*1/delta_t;j++)
     {
         t+=delta_t;
-        resolution(tab_particules,delta_t);
+        resolution_verlet(tab_particules,delta_t);
         double energie_totale = Energie_totale(tab_particules);
 
-        //printf("%.10f\n",Energie_totale(tab_particules)); //verification energie totale
-
-        fprintf (out, "%22.8g : %22.8g \n",t,\
-        energie_totale);//Potentiel_LJ(&tab_particules[0],&tab_particules[1]));
+        fprintf (out, "%22.8g  %22.8g \n",t,energie_totale);
 
         // Vérifier si delta_t est égal à 5.0e-4 et mettre à jour le maximum de l'énergie totale
         if (energie_totale > max_energie_totale) {
@@ -270,56 +306,74 @@ int main() {
         printf("Aucune valeur de delta_t n'était égale à 5.0e-4\n");
     }
 
-    const int dim=54;
-    double test[dim];
-    double diviseur[]={ 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                    10, 20, 30, 40, 50, 60, 70, 80, 90,
-                    100, 200, 300, 400, 500, 600, 700, 800, 900,
-                    1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000,
-                    10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000,
-                    100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000
-                    };
+    double test[500],diviseur;
+    const int dim = sizeof(test) / sizeof(test[0]);
+    double x[dim],y[dim];
 
-    for (int i=0; i<dim; ++i) {
-        test[i] = temps_ref/diviseur[i];
+    for (int i = 0; i <= dim ;i++) {
+        diviseur = (i+1)*(i+1)/10;
+        test[i] = temps_ref/diviseur;
         printf(" ,%.10lf ",test[i]);
         if(i%5==0 ) printf("\n");
     }
-
-     char nom_fichier[25];
+    
+    out= fopen("test.txt", "w");
+    //double E0=293.67526; //Euler
+    double E0=293.71623; //verlet
     for (int k=0; k<dim; ++k) {
 
-        sprintf(nom_fichier, "Energies/Etot_%d.txt",k);
         delta_t = test[k];
+        
+        initPoint(&tab_particules[0], 0.369163, 7.001539, 2.461984, 6.004601);
+        initPoint(&tab_particules[1], 11.804992, 12.508632, 6.039470, 6.527302);
+        initPoint(&tab_particules[2], 0.720203, 14.251818, 1.136606, 7.847989);
+        initPoint(&tab_particules[3], 2.790903, 8.519731, 2.597047, 7.523878);
+        initPoint(&tab_particules[4], 5.316689, 9.872263, 0.398034, 5.516499);
+        initPoint(&tab_particules[5], 5.712756, 5.894922, 5.035953, 7.358547);
+        initPoint(&tab_particules[6], 8.860042, 7.814479, 6.068676, 9.158643);
+        initPoint(&tab_particules[7], 12.048815, 1.838540, 1.266312, 8.278652);
+        initPoint(&tab_particules[8], 8.840079, 5.592444, 4.283253, 3.763380);
+        initPoint(&tab_particules[9], 3.101077, 0.484085, 0.290682, 2.547519);
 
-        Particule tab_particules_bis [nbx_particules];
-
-        initPoint(&tab_particules_bis[0], 0.369163, 7.001539, 2.461984, 6.004601);
-        initPoint(&tab_particules_bis[1], 11.804992, 12.508632, 6.039470, 6.527302);
-        initPoint(&tab_particules_bis[2], 0.720203, 14.251818, 1.136606, 7.847989);
-        initPoint(&tab_particules_bis[3], 2.790903, 8.519731, 2.597047, 7.523878);
-        initPoint(&tab_particules_bis[4], 5.316689, 9.872263, 0.398034, 5.516499);
-        initPoint(&tab_particules_bis[5], 5.712756, 5.894922, 5.035953, 7.358547);
-        initPoint(&tab_particules_bis[6], 8.860042, 7.814479, 6.068676, 9.158643);
-        initPoint(&tab_particules_bis[7], 12.048815, 1.838540, 1.266312, 8.278652);
-        initPoint(&tab_particules_bis[8], 8.840079, 5.592444, 4.283253, 3.763380);
-        initPoint(&tab_particules_bis[9], 3.101077, 0.484085, 0.290682, 2.547519);
-
-        char command;
         double t = 0.0;
-        FILE *out ; 
-        out= fopen(nom_fichier, "w");
 
         for (int j = 0; j < 3 * 1 / delta_t; j++) 
         {
             t += delta_t;
-            resolution(tab_particules_bis,delta_t);
-            fprintf(out, "%22.8g : %22.8g \n", t, Energie_totale(tab_particules_bis));
-            if (t >= temps_ref) break;
+            resolution_verlet(tab_particules,delta_t);
+            if (t >= temps_ref) 
+            {
+                 max_energie_totale=Energie_totale(tab_particules);
+                 break;
+            
+            }
+            
             
         }
-        fclose(out);
+         if (isnan(log(max_energie_totale-E0))) continue;
+       
+        fprintf(out, "%22.8g  %22.8g \n",log(delta_t), log(max_energie_totale-E0));
+        x[k]=log(delta_t);
+        y[k]=log(max_energie_totale-E0);
+
     } 
-    return 0;
+    fclose(out); 
+    mc_ax_plus_b (x, y,&a,&b,dim);
+     FILE *gnuplot = popen("gnuplot -persistent", "w");
+
+    if (gnuplot) {
+        // Script Gnuplot pour afficher trois sous-graphiques séparés horizontalement avec des couleurs différentes
+        fprintf(gnuplot, "set terminal pngcairo size 800,600\n");  // Largeur augmentée pour chaque graphique
+        fprintf(gnuplot, "set output 'exposant.png'\n");
+        fprintf(gnuplot, "set xlabel '{/Times-Italic ln(δt)}' font ',18'\n");
+
+        // Sous-graphe pour l'énergie potentielle (bleu)
+        fprintf(gnuplot, "set ylabel '{/Times-Italic ln(E(t^*)-E0)}' font ',18'\n");
+        //fprintf(gnuplot, "plot 'test.txt' using 1:2 title 'Data from test.txt', 2*x+5.6 with lines title 'y = 2x + 4.6'\n");
+        fprintf(gnuplot, "plot 'test.txt' using 1:2 title 'Data', %lf*x+%lf with lines title 'y = %.1lfx + %.1lf'\n", a, b, a, b);
+
+        pclose(gnuplot);
+    }
+    return 0; 
 
 }
