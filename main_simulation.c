@@ -3,11 +3,11 @@
 #include <stdlib.h>
 
 //-----------------------------{Définition des constantes}-----------------------------
-#define nbx_particules 100          //Nombre de particules du système
+#define nbx_particules 100         //Nombre de particules du système
 #define nbx_particules_actives 100  //Nombre de particules actives du système (sert juste pour définir des défauts)
 #define Rc 2.5 * sigma              //Rayon de coupure 
 #define pi M_PI                     //Constante pi
-#define L  200                      // Taille de la boîte
+#define L 20           // Taille de la boîte
 const int sigma = 1;                // sigma du lennard jones adimentionné
 const double Lmoitie = L * 0.5;    // calcul de la valeur de la moitié de L
 const double rho = nbx_particules_actives / (L * L); // rho la densité volumique
@@ -94,8 +94,8 @@ void initialiserConfigurationCristalline(Particule *tab_par) {
     int particules_par_colonne = (nbx_particules + particules_par_ligne - 1) / particules_par_ligne; 
     
     // Espacement entre les particules
-    double espacement_x = 2.3; // Ajustez pour obtenir l'espacement souhaité
-    double espacement_y = 2.3;
+    double espacement_x = 2; // Ajustez pour obtenir l'espacement souhaité
+    double espacement_y = 2;
 
     // Calcul de la largeur et hauteur du réseau
     double largeur_reseau = espacement_x * (particules_par_ligne - 1);
@@ -105,7 +105,7 @@ void initialiserConfigurationCristalline(Particule *tab_par) {
     double decalage_x = -largeur_reseau / 2.0;
     double decalage_y = -hauteur_reseau / 2.0;
 
-    for (int i = 0; i <= particules_par_ligne; i++) 
+    for (int i = 0; i < particules_par_ligne; i++) 
     {
         for (int j = 0; j < particules_par_colonne; j++) 
         {
@@ -119,8 +119,8 @@ void initialiserConfigurationCristalline(Particule *tab_par) {
                 tab_par[index].vy = 0;
 
                 // Générer une vitesse initiale entre -0.5 et 0.5, puis la multiplier par le facteur
-                //tab_par[index].vx = ((double)rand() / RAND_MAX - 0.5) * 10;
-                //tab_par[index].vy = ((double)rand() / RAND_MAX - 0.5) * 10;
+                tab_par[index].vx = ((double)rand() / RAND_MAX - 0.5) *0;
+                tab_par[index].vy = ((double)rand() / RAND_MAX - 0.5) *0;
 
                 tab_par[index].actif = 1; 
                 //si jamais on veut ajouter des defauts 
@@ -359,7 +359,7 @@ int main()
     // Appelle la fonction enregistrer_Positions pour écrire les positions initiales des particules
     enregistrer_Positions(tab_particules, t, pos_file);
 
-    for (int j = 0; j < 1e2; j++) 
+    for (int j = 0; j < 5e4; j++) 
     {
         t += delta_t; // Incrémenter le temps de simulation de delta_t
 
