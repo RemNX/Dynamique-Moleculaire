@@ -32,7 +32,7 @@ ax1.add_patch(boite)
 lines = [ax1.plot([], [], "ob")[0] for _ in range(nbx_particules)]
 
 # Ajout du texte pour le compteur de temps
-time_text = ax1.text(0.95, 0.95, '', transform=ax1.transAxes, ha='right', va='top', fontsize=12, color="blue")
+time_text = ax1.text(0.95, 0.95, '', transform=ax1.transAxes, ha='right', va='top', fontsize=12, color="black")
 
 # Fonction d'initialisation
 def init():
