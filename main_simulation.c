@@ -392,8 +392,8 @@ void resolution(Particule tab_par[], double delta_t, double *viriel)
 //-----------------------------{main}----------------------------------------------------------------
 int main() 
 {
-    // Initialiser le générateur de nombres aléatoires
-    //srand(time(NULL));
+    // Initialiser le générateur de nombres aléatoires avec une graine pour avoir des résultats reproductibles
+    srand(42);
 
     const double delta_t = 5.0e-4; //definition du pas de temps 
     double viriel = 0.0,pression,energie_potentielle,temperature,energie_totale; //definition des variables pour le calcul grandeurs thermodynamiques
