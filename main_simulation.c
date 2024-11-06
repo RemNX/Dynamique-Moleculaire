@@ -3,11 +3,11 @@
 #include <stdlib.h>
 
 //-----------------------------{Définition des constantes}-----------------------------
-#define nbx_particules 100         //Nombre de particules du système
-#define nbx_particules_actives 100  //Nombre de particules actives du système (sert juste pour définir des défauts)
+#define nbx_particules 100   //Nombre de particules du système
+#define nbx_particules_actives 100 //Nombre de particules actives du système (sert juste pour définir des défauts)
 #define Rc 2.5 * sigma              //Rayon de coupure 
 #define pi M_PI                     //Constante pi
-#define L 20           // Taille de la boîte
+#define L  11               // Taille de la boîte
 const int sigma = 1;                // sigma du lennard jones adimentionné
 const double Lmoitie = L * 0.5;    // calcul de la valeur de la moitié de L
 const double rho = nbx_particules_actives / (L * L); // rho la densité volumique
@@ -37,7 +37,7 @@ const double P_tail = 6*pi*epsilon*rho*rho*(terme_commun_frac*inv_Rc_10 - 0.5*in
  * @param vy vitesse selon y de la particule.
  * @param fx force appliquée selon x sur la particule.
  * @param fy force appliquée selon y sur la particule.
- * @param actife  indique si la particule existe(sert pour les défauts)
+ * @param actif  indique si la particule existe(sert pour les défauts)
  */
 typedef struct {
     double x; 
@@ -94,8 +94,8 @@ void initialiserConfigurationCristalline(Particule *tab_par) {
     int particules_par_colonne = (nbx_particules + particules_par_ligne - 1) / particules_par_ligne; 
     
     // Espacement entre les particules
-    double espacement_x = 2; // Ajustez pour obtenir l'espacement souhaité
-    double espacement_y = 2;
+    double espacement_x = 1.1; // Ajustez pour obtenir l'espacement souhaité
+    double espacement_y = 1.1;
 
     // Calcul de la largeur et hauteur du réseau
     double largeur_reseau = espacement_x * (particules_par_ligne - 1);
@@ -105,7 +105,7 @@ void initialiserConfigurationCristalline(Particule *tab_par) {
     double decalage_x = -largeur_reseau / 2.0;
     double decalage_y = -hauteur_reseau / 2.0;
 
-    for (int i = 0; i < particules_par_ligne; i++) 
+    for (int i = 0; i <= particules_par_ligne; i++) 
     {
         for (int j = 0; j < particules_par_colonne; j++) 
         {
@@ -115,16 +115,18 @@ void initialiserConfigurationCristalline(Particule *tab_par) {
                 // Position initiale centrée autour de (0, 0)
                 tab_par[index].x = i * espacement_x + decalage_x;
                 tab_par[index].y = j * espacement_y + decalage_y;
-                tab_par[index].vx = 0; 
-                tab_par[index].vy = 0;
+                //tab_par[index].vx = 0; 
+                //tab_par[index].vy = 0;
+                tab_par[index].fx=0;
+                tab_par[index].fy=0;
 
                 // Générer une vitesse initiale entre -0.5 et 0.5, puis la multiplier par le facteur
-                tab_par[index].vx = ((double)rand() / RAND_MAX - 0.5) *0;
-                tab_par[index].vy = ((double)rand() / RAND_MAX - 0.5) *0;
+                tab_par[index].vx = ((double)rand() / RAND_MAX - 0.5) * 10;
+                tab_par[index].vy = ((double)rand() / RAND_MAX - 0.5) * 10;
 
                 tab_par[index].actif = 1; 
                 //si jamais on veut ajouter des defauts 
-                /*if(index==12 || index==22 || index==44)
+                /*if(index==12 || index==85)
                 {
                     tab_par[index].actif=0; 
                 }*/
@@ -132,7 +134,6 @@ void initialiserConfigurationCristalline(Particule *tab_par) {
         }
     }
 }
-
 
 
 
@@ -188,7 +189,7 @@ void calcul_grandeurs(Particule tab_par[], double *temperature , double *pressio
         
     }
     *temperature = (energie_cinetique / nbx_particules_actives); //calcul et mise à jour de la temperature
-    *pression = (nbx_particules_actives * (*temperature) / V) + (viriel / (dimension * V))+P_tail; //calcul et mise à jour de la pression
+    *pression = (nbx_particules_actives * (*temperature) / V) + (viriel / (dimension * V*nbx_particules_actives))+P_tail; //calcul et mise à jour de la pression
     *enegrie_potentielle = U+U_tail;    //calcul et mise à jour l'energie potentielle
     *enegrie_totale=(*enegrie_potentielle)+energie_cinetique; //calcul et mise à jour de l'energie totale
 }
@@ -197,6 +198,9 @@ void enregistrer_Positions(Particule *tab_par,double t, FILE *file) {
     fprintf (file, "%22.8g",t);
         for ( int i=0;i<nbx_particules;i++)
         {
+
+        if (!tab_par[i].actif) continue;
+
          fprintf (file, "%22.8g %22.8g",tab_par[i].x,tab_par[i].y);
         }
         fprintf (file, "\n");
@@ -220,56 +224,57 @@ void enregistrer_Positions(Particule *tab_par,double t, FILE *file) {
  *       valides dans l'espace de simulation.
  */
 void calcul_forces(Particule tab_par[], double *viriel) {
-    /*définition des variables locales à utiliser dans les calculs*/
-    double f_x, f_y; //varibels de stockage temporaire pour la force selon x, selon y
-    double rij2, x_sous, y_sous; //rij2, Dx, Dy
-    double inv_r2, inv_r6, terme_commun; //puissances de rij, et terme commun aux calculs des forces
-    double abs_distx, abs_disty; //valeurs absolues de Dx, Dy
+    // Initialiser le viriel (sert pour le calcul de la pression)
+    *viriel = 0.0;
 
-    *viriel = 0.0;  // Initialiser le viriel (sert pour le calcul de la pression)
+    // Réinitialiser les forces et l'énergie potentielle
+    for (int i = 0; i < nbx_particules; i++) {
+        tab_par[i].fx = 0.0;
+        tab_par[i].fy = 0.0;
+    }
 
-    for (int i = 0; i < nbx_particules; i++) 
-    {
-        /*condition qui verifie que le calcul se fait que par rapports aux partiucules et ignore les défauts*/
-        if(!tab_par[i].actif) continue; 
-        //initalisation des variable de stockage
-        f_x = 0.0;
-        f_y = 0.0;
-        for (int j = 0; j < nbx_particules; j++) 
-        {
-            /*condition qui verifie qu'on ne calcule pas une force sur la particule elle même et ignore les défauts*/        
-            if (j != i && tab_par[j].actif) 
-            {
-                x_sous = tab_par[j].x - tab_par[i].x;//calcul de Dx
-                y_sous = tab_par[j].y - tab_par[i].y; //calcul de Dy
-                abs_distx = fabs(x_sous); // |Dx|
-                abs_disty = fabs(y_sous); // |Dy|
-                /*Avec ces conditions on cherche la copie periodique, de particule s'il le faut(|Dx|>L/2,|Dy|>L/2). 
-                Et ensuite on fait l'interation : calcul des forces*/
-                if (abs_distx > Lmoitie) {x_sous = -(x_sous / abs_distx) * (L - abs_distx);}
-                
+    // Calcul des forces d'interaction entre les particules
+    for (int i = 0; i < nbx_particules; i++) {
+        if (!tab_par[i].actif) continue;
 
-                if (abs_disty > Lmoitie) {y_sous = -(y_sous / abs_disty) * (L - abs_disty);}
-                /*calcul de la distance entre les deux particules apres avoir cherché la copie*/
-                rij2 = x_sous * x_sous + y_sous * y_sous; 
+        for (int j = i + 1; j < nbx_particules; j++) {
+            if (!tab_par[j].actif) continue;
 
-                /*Conditions qui permet de calculer les interactions que si rij<Rc car le potentiel est nul sinon */
+            double x_sous = tab_par[i].x - tab_par[j].x;
+            double y_sous = tab_par[i].y - tab_par[j].y;
 
-                if (rij2 < Rc2) 
-                {
-                    //calcul des puissances de rij
-                    inv_r2 = 1.0 / rij2;        // 1/rij^2
-                    inv_r6 = inv_r2 * inv_r2 * inv_r2; // 1/rij^6
-                    terme_commun = 24.0 * (inv_r6 * inv_r2 - 2 * inv_r6 * inv_r6 * inv_r2); //calcul du terme commun à fx et fy
-                    f_x += terme_commun * x_sous;  //calcul de la force selon x 
-                    f_y += terme_commun * y_sous;   //calcul de la force selon y
-                    //calcul et mise à jour du calcul de la vriable viriel qui nous sert pour le calcul de la pression
-                    *viriel += terme_commun*rij2;   
-                }
+            double abs_distx = fabs(x_sous);
+            double abs_disty = fabs(y_sous);
+
+            if (abs_distx > Lmoitie) {
+                x_sous = - (x_sous / abs_distx) * (L - abs_distx);
             }
-        } 
-        tab_par[i].fx = f_x;  //mise à jour de la force selon x 
-        tab_par[i].fy = f_y;  //mise à jour de la force selon y
+
+            if (abs_disty > Lmoitie) {
+                y_sous = - (y_sous / abs_disty) * (L - abs_disty);
+            }
+
+            double rij2 = x_sous * x_sous + y_sous * y_sous;
+
+            if (rij2 < Rc2) {
+                double r6 = rij2 * rij2 * rij2;
+                double r12 = r6 * r6;
+                double inv_r2 = 1.0 / rij2;
+                double inv_r6 = 1.0 / r6;
+                double inv_r12 = 1.0 / r12;
+                double terme_commun = 24.0 * (2 * inv_r12 - inv_r6) * inv_r2;
+
+                double force_x = terme_commun * x_sous;
+                double force_y = terme_commun * y_sous;
+
+                tab_par[i].fx += force_x;
+                tab_par[j].fx -= force_x;
+                tab_par[i].fy += force_y;
+                tab_par[j].fy -= force_y;
+
+                *viriel += terme_commun * rij2;
+            }
+        }
     }
 }
 
@@ -295,18 +300,18 @@ void calcul_forces(Particule tab_par[], double *viriel) {
 */
 void resolution(Particule tab_par[], double delta_t, double *viriel) 
 {
-    /* Creation d'un tableau de particules temporaire qu'on va utiliser pour stocker 
-    le calcul des forces a t+dt*/
-    Particule tab_par_temp[nbx_particules];
+
     //calcul des force à t
     calcul_forces(tab_par, viriel);
+
     for (int i = 0; i < nbx_particules; i++) 
     {
         if (!tab_par[i].actif) continue; //pour verifer qu'on fait pas la resolution pour un defaut si y'en a
 
         // on calcul la nouvelle position en x et y en utilisant la méthode de Verlet
-        tab_par[i].x = tab_par[i].x + tab_par[i].vx * delta_t + 0.5 * tab_par[i].fx * (delta_t * delta_t);
-        tab_par[i].y = tab_par[i].y + tab_par[i].vy * delta_t + 0.5 * tab_par[i].fy * (delta_t * delta_t);
+        tab_par[i].x += tab_par[i].vx * delta_t + 0.5 * tab_par[i].fx * (delta_t * delta_t);
+        tab_par[i].y += tab_par[i].vy * delta_t + 0.5 * tab_par[i].fy * (delta_t * delta_t);
+
         /*puis on pose les conditions periodiques qui font que si la particule sort de la boite, elle 
         rentre de l'autre coté*/
         //selon x
@@ -314,23 +319,21 @@ void resolution(Particule tab_par[], double delta_t, double *viriel)
         else if (tab_par[i].x < -Lmoitie) {tab_par[i].x += L;}
         //selon y
         if (tab_par[i].y > Lmoitie) {tab_par[i].y -= L;}
-         else if (tab_par[i].y < -Lmoitie) {tab_par[i].y += L; }
-        //on initilise les particules temporaire avec les valeurs actuelles calculées
-        tab_par_temp[i].x = tab_par[i].x;
-        tab_par_temp[i].y = tab_par[i].y;
-        tab_par_temp[i].fx = tab_par[i].fx;
-        tab_par_temp[i].fy = tab_par[i].fy;
+        else if (tab_par[i].y < -Lmoitie) {tab_par[i].y += L; }
+
+        tab_par[i].vx += 0.5*tab_par[i].fx*delta_t;
+        tab_par[i].vy += 0.5*tab_par[i].fy*delta_t;
     }
     //calcul des force à t+dt
-    calcul_forces(tab_par_temp,viriel);
+    calcul_forces(tab_par,viriel);
 
     //on calcul ensuite les vitesses en utilisant toujours la méthode de Verlet
     for (int i = 0; i < nbx_particules; i++) 
     {    
         if (!tab_par[i].actif) continue ; //pour verifer qu'on fait pas la resolution pour un defaut si y'en a
 
-        tab_par[i].vx = tab_par[i].vx + 0.5 * (tab_par_temp[i].fx + tab_par[i].fx) * delta_t; // vitesse selon x
-        tab_par[i].vy = tab_par[i].vy + 0.5 * (tab_par_temp[i].fy + tab_par[i].fy) * delta_t; // vitesse selon y
+        tab_par[i].vx += 0.5 *tab_par[i].fx * delta_t; // vitesse selon x
+        tab_par[i].vy += 0.5 * tab_par[i].fy * delta_t; // vitesse selon y
     }
 }
 
@@ -341,11 +344,18 @@ int main()
 
     const double delta_t = 5.0e-4; //definition du pas de temps 
     double viriel = 0.0,pression,energie_potentielle,temperature,energie_totale; //definition des variables pour le calcul grandeurs thermodynamiques
+
+    /*Pour le calcul des valeurs moyennes*/
+    double moyenne_temp=0;
+    double moyenne_press=0;
+    double moyenne_ep=0; 
+    double count=0;
+
     double t = 0.0; //definition de la variable dont on va stocker le temps incrementé
     // Creation d'un tableau de particules
     Particule tab_particules[nbx_particules];
     // Initialisation des particules avec une configuration cristalline
-    initialiserConfigurationCristalline(tab_particules);    
+    initialiserConfigurationCristalline(tab_particules);   
     
     // Ouvre le fichier "positions_data.txt" en mode écriture ("w")
     // Ce fichier stockera les positions des particules au fil du temps dans le format suivant:
@@ -359,7 +369,7 @@ int main()
     // Appelle la fonction enregistrer_Positions pour écrire les positions initiales des particules
     enregistrer_Positions(tab_particules, t, pos_file);
 
-    for (int j = 0; j < 5e4; j++) 
+    for (int j = 0; j < 3*1/delta_t ; j++) 
     {
         t += delta_t; // Incrémenter le temps de simulation de delta_t
 
@@ -370,6 +380,12 @@ int main()
 
         // Calculer les grandeurs thermodynamiques
         calcul_grandeurs(tab_particules,&temperature,&pression,&energie_potentielle,&energie_totale, viriel);
+        if (t>0.5){
+            moyenne_ep += energie_potentielle;
+            moyenne_press += pression;
+            moyenne_temp += temperature;
+            count +=1;
+        }
         // Enregistrer les positions de chaque pas de temps
         enregistrer_Positions(tab_particules,t,pos_file);         
         // Écrire l'énergie totale, la température et la pression dans le fichier
@@ -378,41 +394,53 @@ int main()
     fclose(data_file); // Ferme le fichier de simulation_data.txt pour s'assurer que toutes les données sont écrites et libérer les ressources associées
     fclose(pos_file);  // De même pour le fichier positions_data.txt
 
+    moyenne_ep = moyenne_ep/count;
+    moyenne_press = moyenne_press/count;
+    moyenne_temp = moyenne_temp/count;
+
+    printf("Moyenne de l'énergie potentielle: %.6f\n", moyenne_ep);
+    printf("Moyenne de la température: %.6f\n", moyenne_temp);
+    printf("Moyenne de la pression: %.6f\n", moyenne_press);
+
 
     // Ouvre un processus Gnuplot en mode écriture ("w") pour envoyer des commandes de tracé
     // "gnuplot -persistent" permet de garder la fenêtre du graphique ouverte après l'exécution des commandes
     FILE *gnuplot = popen("gnuplot -persistent", "w");
 
     if (gnuplot) {
-        // Script Gnuplot pour afficher trois sous-graphiques séparés horizontalement avec des couleurs différentes
-        fprintf(gnuplot, "set terminal pngcairo size 1800,600\n");  // Largeur augmentée pour chaque graphique
-        fprintf(gnuplot, "set output 'simulation_graphs.png'\n");
-        fprintf(gnuplot, "set xlabel '{/Times-Italic t}' font ',18'\n");
+    // Script Gnuplot pour afficher trois sous-graphiques séparés horizontalement avec des couleurs différentes
+    fprintf(gnuplot, "set terminal pngcairo size 1800,600\n");  // Largeur augmentée pour chaque graphique
+    fprintf(gnuplot, "set output 'simulation_graphs.png'\n");
+    fprintf(gnuplot, "set xlabel '{/Times-Italic t}' font ',18'\n");
 
-        // Configuration de multiplot pour trois sous-graphiques alignés horizontalement
-        fprintf(gnuplot, "set multiplot layout 1, 3 \n");
-        fprintf(gnuplot, "unset key \n");
+    // Configuration de multiplot pour trois sous-graphiques alignés horizontalement
+    fprintf(gnuplot, "set multiplot layout 1, 3 \n");
+    fprintf(gnuplot, "unset key \n");
 
-        // Sous-graphe pour l'énergie potentielle (bleu)
-        fprintf(gnuplot, "set ylabel '{/Times-Italic U}' font ',18'\n");
-        fprintf(gnuplot, "set title '{/Times-Italic Énergie Potentielle}' font ',20' \n");
-        fprintf(gnuplot, "plot 'simulation_data.txt' using 1:3 with lines linecolor rgb '#1976D2' \n");
+    // Sous-graphe pour l'énergie potentielle (bleu)
+    fprintf(gnuplot, "set ylabel '{/Times-Italic U}' font ',18'\n");
+    fprintf(gnuplot, "set title '{/Times-Italic Énergie Potentielle}' font ',20' \n");
+    fprintf(gnuplot, "plot 'simulation_data.txt' using 1:3 with lines linecolor rgb '#1976D2' title 'Énergie Potentielle', \\\n");
+    fprintf(gnuplot, "     (%.6f) title 'Moyenne' with lines linestyle 2 linecolor rgb '#FF9800'\n", moyenne_ep);
 
-        // Sous-graphe pour la température (rouge)
-        fprintf(gnuplot, "set ylabel '{/Times-Italic T}' font ',18'\n");
-        fprintf(gnuplot, "set title '{/Times-Italic Température}' font ',20'\n"); 
-        fprintf(gnuplot, "plot 'simulation_data.txt' using 1:4 with lines linecolor rgb '#D32F2F' \n");
+    // Sous-graphe pour la température (rouge)
+    fprintf(gnuplot, "set ylabel '{/Times-Italic T}' font ',18'\n");
+    fprintf(gnuplot, "set title '{/Times-Italic Température}' font ',20'\n"); 
+    fprintf(gnuplot, "plot 'simulation_data.txt' using 1:4 with lines linecolor rgb '#D32F2F' title 'Température', \\\n");
+    fprintf(gnuplot, "     (%.6f) title 'Moyenne' with lines linestyle 2 linecolor rgb '#FF9800'\n", moyenne_temp);
 
-        // Sous-graphe pour la pression (vert)
-        fprintf(gnuplot, "set ylabel '{/Times-Italic P}' font ',18'\n");
-        fprintf(gnuplot, "set title '{/Times-Italic Pression}' font ',20' \n");
-        fprintf(gnuplot, "plot 'simulation_data.txt' using 1:5 with lines linecolor rgb '#4CAF50'\n");
+    // Sous-graphe pour la pression (vert)
+    fprintf(gnuplot, "set ylabel '{/Times-Italic P}' font ',18'\n");
+    fprintf(gnuplot, "set title '{/Times-Italic Pression}' font ',20' \n");
+    fprintf(gnuplot, "plot 'simulation_data.txt' using 1:5 with lines linecolor rgb '#4CAF50' title 'Pression', \\\n");
+    fprintf(gnuplot, "     (%.6f) title 'Moyenne' with lines linestyle 2 linecolor rgb '#FF9800'\n", moyenne_press);
 
-        // Fin de multiplot
-        fprintf(gnuplot, "unset multiplot\n");
-        // Fermeture du processus Gnuplop
-        pclose(gnuplot);
-    }
+    // Fin de multiplot
+    fprintf(gnuplot, "unset multiplot\n");
+
+    // Fermeture du processus Gnuplot
+    pclose(gnuplot);
+}
 
     return 0;
 }

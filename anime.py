@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # Définition de L pour la boîte de délimitation
-L = 20  # Définissez la longueur du côté souhaitée pour la boîte
+L = 11  # Définissez la longueur du côté souhaitée pour la boîte
 
 # Chargement des données de température
 time_data = []
@@ -34,6 +34,15 @@ lines = [ax1.plot([], [], "ob")[0] for _ in range(nbx_particules)]
 # Ajout du texte pour le compteur de temps
 time_text = ax1.text(0.95, 0.95, '', transform=ax1.transAxes, ha='right', va='top', fontsize=12, color="black")
 
+for s in range(nbx_particules):
+    pos_x = positions[0][2 * s]     # Position x initiale de la particule
+    pos_y = positions[0][2 * s + 1] # Position y initiale de la particule
+    lines[s].set_data([pos_x], [pos_y])
+
+# Sauvegarde de l'image initiale
+fig.set_size_inches(8, 6)  # Définit la taille en pouces pour obtenir 800x600 pixels à 100 DPI
+plt.savefig("etat_initial.png", dpi=300)  # Enregistrer avec une résolution de 300 DPI
+
 # Fonction d'initialisation
 def init():
     for line in lines:
@@ -55,7 +64,7 @@ def update(i):
     return lines + [time_text]
 
 # Création de l'animation
-ani = FuncAnimation(fig, update, frames=len(time_data), interval=1, init_func=init, blit=True)
+ani = FuncAnimation(fig, update, frames=range(0,len(time_data),10), interval=1, init_func=init, blit=True)
 
 # Affichage de l'animation
 plt.tight_layout()
