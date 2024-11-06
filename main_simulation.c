@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <time.h>
 
 //-----------------------------{Définition des constantes}-----------------------------
 #define nbx_particules 100   //Nombre de particules du système
 #define nbx_particules_actives 100 //Nombre de particules actives du système (sert juste pour définir des défauts)
-#define Rc 2.5 * sigma              //Rayon de coupure 
+#define Rc 2.5* sigma              //Rayon de coupure 
 #define pi M_PI                     //Constante pi
 #define L  11               // Taille de la boîte
 const int sigma = 1;                // sigma du lennard jones adimentionné
@@ -71,7 +72,57 @@ void init_Particule(Particule *p, double x, double y, double vx, double vy) {
     p->vy = vy;
 }
 
-//-----------------------------{Initialise la configuration}------------------------------------------
+/**
+ * @brief Initialise une configuration aléatoire de particules dans une boîte carrée de côté L.
+ * 
+ * Cette fonction remplit un tableau de particules avec des positions et des vitesses générées aléatoirement.
+ * Les particules sont positionnées dans une plage de coordonnées allant de -L/2 à L/2.
+ * Chaque nouvelle particule respecte une distance minimale spécifiée par rapport aux particules existantes.
+ * 
+ * @param tab_par Tableau de particules à remplir avec des configurations aléatoires.
+ */
+void initialiser_Configuration_aleatoire(Particule tab_par[]) {
+    int fac = 0; // Facteur maximum pour les valeurs aléatoires de vitesse (vx, vy)
+    double MIN_DISTANCE = 1; // Distance minimale entre les particules pour éviter les chevauchements
+
+    // Boucle pour générer nbx_particules particules
+    for (int i = 0; i < nbx_particules; i++) {
+        Particule p; // Nouvelle particule à ajouter au tableau
+        int isTooClose; // Flag pour vérifier si la particule est trop proche d'une autre
+
+        // Génère une nouvelle particule jusqu'à ce qu'elle soit suffisamment éloignée des autres
+        do {
+            isTooClose = 0; // Réinitialise le flag avant de générer une nouvelle particule
+
+            // Génère des coordonnées (x, y) aléatoires entre -L/2 et L/2
+            p.x = ((double)rand() / RAND_MAX * L) - Lmoitie;
+            p.y = ((double)rand() / RAND_MAX * L) - Lmoitie;
+
+            // Génère des vitesses (vx, vy) aléatoires entre 0 et fac
+            p.vx = (double)rand() / RAND_MAX * fac;
+            p.vy = (double)rand() / RAND_MAX * fac;
+
+            // Vérifie la distance de cette particule avec chaque particule déjà générée
+            for (int j = 0; j < i; j++) {
+                // Calcul de la distance entre la particule actuelle et chaque particule déjà existante
+                double distance = sqrt(pow(p.x - tab_par[j].x, 2) + pow(p.y - tab_par[j].y, 2));
+                
+                // Si la particule est trop proche d'une autre, on active le flag et on quitte la boucle
+                if (distance < MIN_DISTANCE) {
+                    isTooClose = 1; // Marque que la particule est trop proche
+                    break; // Sort de la boucle de vérification
+                }
+            }
+        } while (isTooClose); // Répète jusqu'à trouver une position non conflictuelle
+
+        // Ajoute la particule validée dans le tableau
+        tab_par[i] = p;
+        tab_par[i].actif=1;
+    }
+}
+
+
+//-----------------------------{Initialise la configuration cristalline}------------------------------------------
 /**
  * @brief Initialise une configuration cristalline pour un ensemble de particules.
  *
@@ -88,7 +139,9 @@ void init_Particule(Particule *p, double x, double y, double vx, double vy) {
  *       grand pour contenir toutes les particules nécessaires.
  * 
  */
-void initialiserConfigurationCristalline(Particule *tab_par) {
+void initialiser_Configuration_Cristalline(Particule *tab_par) 
+{
+    int fac = 10; // Facteur maximum pour les valeurs aléatoires de vitesse (vx, vy)
     // Calculer le nombre de particules par ligne et par colonne
     int particules_par_ligne = (int)sqrt(nbx_particules); 
     int particules_par_colonne = (nbx_particules + particules_par_ligne - 1) / particules_par_ligne; 
@@ -121,8 +174,8 @@ void initialiserConfigurationCristalline(Particule *tab_par) {
                 tab_par[index].fy=0;
 
                 // Générer une vitesse initiale entre -0.5 et 0.5, puis la multiplier par le facteur
-                tab_par[index].vx = ((double)rand() / RAND_MAX - 0.5) * 10;
-                tab_par[index].vy = ((double)rand() / RAND_MAX - 0.5) * 10;
+                tab_par[index].vx = ((double)rand() / RAND_MAX - 0.5) * fac;
+                tab_par[index].vy = ((double)rand() / RAND_MAX - 0.5) * fac;
 
                 tab_par[index].actif = 1; 
                 //si jamais on veut ajouter des defauts 
@@ -336,11 +389,17 @@ void resolution(Particule tab_par[], double delta_t, double *viriel)
         tab_par[i].vy += 0.5 * tab_par[i].fy * delta_t; // vitesse selon y
     }
 }
-
+void afficher_progression(double temps_actuel, double temps_final) {
+    // Calcul du pourcentage complété
+    double progression = (temps_actuel / temps_final) * 100;
+    printf("\rProgression : %.2f%%", progression);
+    fflush(stdout);
+}
 //-----------------------------{main}----------------------------------------------------------------
 int main() 
 {
-    //srand(42);
+    // Initialiser le générateur de nombres aléatoires
+    //srand(time(NULL));
 
     const double delta_t = 5.0e-4; //definition du pas de temps 
     double viriel = 0.0,pression,energie_potentielle,temperature,energie_totale; //definition des variables pour le calcul grandeurs thermodynamiques
@@ -350,12 +409,16 @@ int main()
     double moyenne_press=0;
     double moyenne_ep=0; 
     double count=0;
+    double tmax=3;//temps au bout du quel s'arrete la simulation
 
     double t = 0.0; //definition de la variable dont on va stocker le temps incrementé
     // Creation d'un tableau de particules
     Particule tab_particules[nbx_particules];
     // Initialisation des particules avec une configuration cristalline
-    initialiserConfigurationCristalline(tab_particules);   
+    initialiser_Configuration_Cristalline(tab_particules);   
+
+    // Initialisation des particules avec une configuration aleatoire
+    //initialiser_Configuration_aleatoire(tab_particules);
     
     // Ouvre le fichier "positions_data.txt" en mode écriture ("w")
     // Ce fichier stockera les positions des particules au fil du temps dans le format suivant:
@@ -369,7 +432,7 @@ int main()
     // Appelle la fonction enregistrer_Positions pour écrire les positions initiales des particules
     enregistrer_Positions(tab_particules, t, pos_file);
 
-    for (int j = 0; j < 3*1/delta_t ; j++) 
+    while(t<=tmax)
     {
         t += delta_t; // Incrémenter le temps de simulation de delta_t
 
@@ -390,6 +453,7 @@ int main()
         enregistrer_Positions(tab_particules,t,pos_file);         
         // Écrire l'énergie totale, la température et la pression dans le fichier
         fprintf(data_file, "%22.8g  %22.8g  %22.8g  %22.8g  %22.8g\n", t, energie_totale, energie_potentielle, temperature, pression);
+        afficher_progression(t,tmax);
     }
     fclose(data_file); // Ferme le fichier de simulation_data.txt pour s'assurer que toutes les données sont écrites et libérer les ressources associées
     fclose(pos_file);  // De même pour le fichier positions_data.txt
@@ -398,7 +462,7 @@ int main()
     moyenne_press = moyenne_press/count;
     moyenne_temp = moyenne_temp/count;
 
-    printf("Moyenne de l'énergie potentielle: %.6f\n", moyenne_ep);
+    printf("\nMoyenne de l'énergie potentielle: %.6f\n", moyenne_ep);
     printf("Moyenne de la température: %.6f\n", moyenne_temp);
     printf("Moyenne de la pression: %.6f\n", moyenne_press);
 
