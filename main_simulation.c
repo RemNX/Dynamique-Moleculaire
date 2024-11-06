@@ -389,12 +389,6 @@ void resolution(Particule tab_par[], double delta_t, double *viriel)
         tab_par[i].vy += 0.5 * tab_par[i].fy * delta_t; // vitesse selon y
     }
 }
-void afficher_progression(double temps_actuel, double temps_final) {
-    // Calcul du pourcentage complété
-    double progression = (temps_actuel / temps_final) * 100;
-    printf("\rProgression : %.2f%%", progression);
-    fflush(stdout);
-}
 //-----------------------------{main}----------------------------------------------------------------
 int main() 
 {
@@ -451,9 +445,11 @@ int main()
         }
         // Enregistrer les positions de chaque pas de temps
         enregistrer_Positions(tab_particules,t,pos_file);         
-        // Écrire l'énergie totale, la température et la pression dans le fichier
+        // Écrire le temps , l'énergie totale, l'energie potentielle, la température et la pression dans le fichier "simulation_data.txt"
         fprintf(data_file, "%22.8g  %22.8g  %22.8g  %22.8g  %22.8g\n", t, energie_totale, energie_potentielle, temperature, pression);
-        afficher_progression(t,tmax);
+       
+    	printf("\rProgression : %.2f%%", (t / tmax) * 100);// pour afficher le  pourcentage de progression de la simulation
+    	fflush(stdout);	//permet de forcer cet affichage sans attendre
     }
     fclose(data_file); // Ferme le fichier de simulation_data.txt pour s'assurer que toutes les données sont écrites et libérer les ressources associées
     fclose(pos_file);  // De même pour le fichier positions_data.txt
